@@ -12,4 +12,5 @@ export type SyncProgressData = {
 export interface ProgressRepository {
   findByUserId(userId: string): Promise<PlayerProgressEntity[]>;
   upsert(data: SyncProgressData): Promise<PlayerProgressEntity>;
+  deleteByUserId(userId: string): Promise<void>;
 }

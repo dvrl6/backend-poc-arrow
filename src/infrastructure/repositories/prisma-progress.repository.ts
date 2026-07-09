@@ -39,6 +39,10 @@ export class PrismaProgressRepository implements ProgressRepository {
     return this.mapProgress(progress);
   }
 
+  async deleteByUserId(userId: string): Promise<void> {
+    await this.prisma.playerProgress.deleteMany({ where: { userId } });
+  }
+
   private mapProgress(progress: PlayerProgress): PlayerProgressEntity {
     return {
       id: progress.id,

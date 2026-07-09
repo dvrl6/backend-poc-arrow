@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { GetMyProgressUseCase } from '../application/progress/get-my-progress.use-case';
+import { ResetProgressUseCase } from '../application/progress/reset-progress.use-case';
 import { SyncProgressUseCase } from '../application/progress/sync-progress.use-case';
 import { PROGRESS_REPOSITORY } from '../application/tokens';
 import { PrismaModule } from '../infrastructure/database/prisma.module';
@@ -13,6 +14,7 @@ import { AuthModule } from './auth.module';
   providers: [
     GetMyProgressUseCase,
     SyncProgressUseCase,
+    ResetProgressUseCase,
     {
       provide: PROGRESS_REPOSITORY,
       useClass: PrismaProgressRepository,

@@ -13,6 +13,7 @@ import { UpdateLevelUseCase } from '../src/application/levels/update-level.use-c
 import { GetLeaderboardUseCase } from '../src/application/leaderboard/get-leaderboard.use-case';
 import { SubmitLeaderboardScoreUseCase } from '../src/application/leaderboard/submit-leaderboard-score.use-case';
 import { GetMyProgressUseCase } from '../src/application/progress/get-my-progress.use-case';
+import { ResetProgressUseCase } from '../src/application/progress/reset-progress.use-case';
 import { SyncProgressUseCase } from '../src/application/progress/sync-progress.use-case';
 import { LevelRepository, SaveLevelData } from '../src/application/ports/level.repository';
 import {
@@ -150,6 +151,14 @@ class InMemoryProgressRepository implements ProgressRepository {
     this.progress.set(key, item);
     return item;
   }
+
+  async deleteByUserId(userId: string): Promise<void> {
+    for (const [key, item] of this.progress.entries()) {
+      if (item.userId === userId) {
+        this.progress.delete(key);
+      }
+    }
+  }
 }
 
 class InMemoryLeaderboardRepository implements LeaderboardRepository {
@@ -204,6 +213,7 @@ describe('API core', () => {
         UpdateLevelUseCase,
         GetMyProgressUseCase,
         SyncProgressUseCase,
+        ResetProgressUseCase,
         GetLeaderboardUseCase,
         SubmitLeaderboardScoreUseCase,
         JwtAuthGuard,
@@ -348,6 +358,36 @@ describe('API core', () => {
       .expect(201);
 
     expect(response.body.completed).toBe(true);
+  });
+
+  it('should_delete_progress_when_user_is_authenticated', async () => {
+    await request(app.getHttpServer())
+      .post('/progress/sync')
+      .set('Authorization', `Bearer ${playerToken}`)
+      .send({
+        levelId: 'level-reset',
+        completed: true,
+        bestScore: 500,
+        bestMoves: 20,
+        bestTimeSeconds: 90,
+      })
+      .expect(201);
+
+    await request(app.getHttpServer())
+      .delete('/progress')
+      .set('Authorization', `Bearer ${playerToken}`)
+      .expect(204);
+
+    const response = await request(app.getHttpServer())
+      .get('/progress/me')
+      .set('Authorization', `Bearer ${playerToken}`)
+      .expect(200);
+
+    expect(response.body).toHaveLength(0);
+  });
+
+  it('should_reject_progress_reset_when_unauthenticated', async () => {
+    await request(app.getHttpServer()).delete('/progress').expect(401);
   });
 
   it('should_return_leaderboard_for_level', async () => {
