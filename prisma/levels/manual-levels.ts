@@ -373,6 +373,30 @@ const levelSpecs: LevelSpec[] = [
     timeLimit: 70,
     maxMoves: 54,
   },
+  // Levels 16-25 are figure (16-20) and multi-layer 3D (21-25) levels whose
+  // authoritative, playable definitions live in the frontend's local assets
+  // (`manual_levels_2d.json` / `manual_levels_3d.json`) and are never rendered
+  // from the backend. These rows exist only so the backend has a `Level` per
+  // internal number: the leaderboard and progress flows resolve a local level
+  // number to its backend `Level.id` via `GET /levels`, and without a row here
+  // that lookup returns null for 16-25 — which left every 3D level's
+  // leaderboard permanently empty (it never reached `GET /leaderboard/:id`).
+  // The `definitionJson` below is a minimal valid 2D placeholder; it is not the
+  // real board and is intentionally not used for gameplay.
+  ...Array.from({ length: 10 }, (_, index): LevelSpec => {
+    const number = 16 + index;
+    return {
+      number,
+      name: `Level ${number}`,
+      difficulty: 'hard',
+      width: 3,
+      height: 3,
+      arrows: [{ id: 'a1', nodes: ['n0_0', 'n1_0'], direction: 'right' }],
+      blockedEdges: [],
+      timeLimit: 90,
+      maxMoves: 40,
+    };
+  }),
 ];
 
 export const manualLevels: ManualLevelSeed[] = levelSpecs.map(buildLevel);
