@@ -167,7 +167,7 @@ Interactive Swagger docs available at **`/api/docs`** when the server is running
 
 ### Prerequisites
 
-- **Node.js** ≥ 18
+- **Node.js** ≥ 20 (the Docker image uses Node 24; a host install is only needed for the no-Docker workflow below)
 - **Docker** and **Docker Compose** (for PostgreSQL)
 - **npm** (comes with Node.js)
 
@@ -185,23 +185,28 @@ npm install
 cp .env.example .env
 # Edit .env with your values (see Environment Variables below)
 
-# 4. Start PostgreSQL via Docker and the API
+# 4. Start PostgreSQL and the API via Docker
 docker compose up --build
-
-# 5. Run migrations and seed (in a separate terminal if needed)
-npx prisma migrate dev
-npm run prisma:seed
 ```
 
-### Run
+The `api` container's entrypoint already runs `prisma migrate deploy`, then the seed script, then starts the server on every `docker compose up` — no separate migrate/seed step is needed for the Docker path.
+
+> **`--build` vs plain `up`:** `--build` only affects services with a `build:` key in `docker-compose.yml` — here that's just `api` (built from `Dockerfile`); `postgres` is pulled as-is from `postgres:17-alpine`, so `--build` is a no-op for it. Use `docker compose up --build` on the first run and after any code/Dockerfile change; plain `docker compose up` is enough (and faster) when nothing's changed since the last build.
+
+### Run without Docker (API on the host, Postgres in Docker)
+
+To run the API directly on the host with hot reload, start only Postgres in Docker, point `.env`'s `DATABASE_URL` at `localhost` instead of the `postgres` service hostname (e.g. `postgresql://postgres:postgres@localhost:5432/arrow_poc?schema=public`), then:
 
 ```powershell
-npm run start:dev   # watch mode (hot reload)
-npm test            # unit tests
-npm run test:e2e    # end-to-end tests
+docker compose up postgres -d   # Postgres only
+npx prisma migrate dev          # apply migrations
+npm run prisma:seed             # seed manual/remote levels (+ admin user if configured)
+npm run start:dev               # watch mode (hot reload)
 ```
 
 > **Note:** There is no `npm run dev` — the dev script is `start:dev`.
+
+See [Testing](#testing) below for the full test/lint/build command set.
 
 ---
 
