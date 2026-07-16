@@ -226,7 +226,23 @@ Create a `.env` file from `.env.example`:
 
 `prisma/levels/manual-levels.ts` contains deterministic, hand-authored, graph-based manual levels. The seed script (`prisma/seed.ts`) upserts them by `Level.number`, ensuring stable `levelId`s the Flutter client maps to.
 
+`prisma/levels/remote-levels.ts` contains additional, real, playable levels reserved in the `number >= 1000` band (see [Backend-Driven Dynamic Levels](#backend-driven-dynamic-levels) below). `seedRemoteLevels()` runs right after the manual seed in `prisma/seed.ts`, upserting by `Level.number` with the same idempotent pattern — re-running `npx prisma db seed` never duplicates rows and never touches numbers 1–30.
+
 If both `ADMIN_EMAIL` and `ADMIN_PASSWORD` are set, the seed also creates or updates an admin user for testing admin-only endpoints via Swagger.
+
+---
+
+## Backend-Driven Dynamic Levels
+
+On top of the offline-first local levels (1–30, bundled with the Flutter client), the backend can serve additional, real, playable levels that the client downloads and merges at runtime — new content ships by seeding the database, with no app rebuild required.
+
+- **Number band**: remote-only levels reserve `number >= 1000` (`1000 + n` in creation order, never reused), keeping them unambiguously separate from the local 1–30 range. `Level.number` is `@unique`, enforcing this at the schema level.
+- **2D/3D discriminator**: the graph shape is the source of truth — any node with `z !== 0` makes a level 3D. `definitionJson.metadata.mode: "2d" | "3d"` is an additive hint for the client to route without scanning nodes first; if `mode` and the actual node `z` values ever disagree, the node data wins.
+- **No schema change**: `definitionJson: Json` already accepts arbitrary shape and `GraphLevelDefinitionValidator` already permits open `metadata`, so this is a pure data/seeding convention, not a migration.
+- **Read path**: the existing `GET /levels` (unauthenticated) already returns full `LevelEntity[]`; the client filters to `number >= 1000` before merging these into its list. No new endpoint was added.
+- **Client behaviour is entirely additive and offline-first**: local levels always load and are authoritative; the client fetches remote levels best-effort, appends any not already present locally (local wins on a number conflict), and caches the last successful fetch for offline replay. A backend outage never affects local gameplay.
+
+Full contract: [`docs/DYNAMIC_LEVELS_CONTRACT.md`](docs/DYNAMIC_LEVELS_CONTRACT.md).
 
 ---
 
