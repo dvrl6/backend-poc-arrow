@@ -27,7 +27,7 @@ Nodus Backend provides the HTTP services that support the Nodus mobile game: use
 
 ---
 
-## Architecture — Clean Architecture
+## Architecture 
 
 The project follows a **layered / ports-and-adapters (hexagonal)** architecture: domain rules are framework-free, the application layer defines ports (interfaces) that infrastructure adapters implement, and interfaces (HTTP controllers) are the only entry point.
 
@@ -63,8 +63,8 @@ test/
 ### Class Diagram
 ![Class Diagram](./docs/backend_class_diagram.svg)
 
-### Clean Architecture Layers Diagram
-![Clean Architecture](./docs/backend_clean_architecture.svg)
+### Architecture Diagram
+![ports-and-adapters](./docs/backend_clean_architecture.svg)
 
 **[View diagrams in Lucidchart](https://lucid.app/lucidchart/5c09fbb7-74be-4dc2-89c5-af638b2b2b71/edit?invitationId=inv_7c5f886f-d720-4be1-86f9-55d565e84361&page=p1#)**
 
